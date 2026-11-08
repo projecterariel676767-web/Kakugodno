@@ -112,6 +112,20 @@ app.post("/api/auth/login", async (req, res) => {
   } catch { res.status(400).json({ error: "Не удалось выполнить вход." }); }
 });
 app.get("/api/me", auth, (req, res) => res.json({ user: safeUser(req.user) }));
+app.get("/api/rtc-config", auth, (req, res) => {
+  const iceServers = [
+    { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }
+  ];
+  if (process.env.TURN_URL && process.env.TURN_USERNAME && process.env.TURN_CREDENTIAL) {
+    iceServers.push({
+      urls: process.env.TURN_URL.split(",").map(value => value.trim()).filter(Boolean),
+      username: process.env.TURN_USERNAME,
+      credential: process.env.TURN_CREDENTIAL
+    });
+  }
+  res.set("Cache-Control", "no-store");
+  res.json({ iceServers });
+});
 app.patch("/api/me", auth, async (req, res) => {
   try {
     if (req.body.avatarUrl !== undefined) req.user.avatarUrl = allowedAvatar(req.body.avatarUrl);

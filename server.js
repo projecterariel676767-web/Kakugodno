@@ -278,6 +278,7 @@ io.on("connection", async socket => {
     for (const link of links) emitUser(String(link.requester) === uid ? link.recipient : link.requester, "presence:update", { userId: uid, online: true });
   }
   socket.emit("presence:snapshot", { online: [...onlineUsers] });
+  socket.on("keepalive", () => socket.emit("keepalive:ok"));
   socket.on("typing", async ({ to, active }) => { if (to && isObjectId(to) && await isContact(uid, to)) emitUser(to, "typing", { userId: uid, active: Boolean(active) }); });
   for (const type of ["offer", "answer", "ice", "hangup", "decline"]) {
     socket.on("call:" + type, async ({ to, data, callType } = {}) => {

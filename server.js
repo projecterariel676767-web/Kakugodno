@@ -87,7 +87,7 @@ const populateMessage = q => q.populate("sender", "nickname avatarUrl").populate
   .populate({ path: "replyTo", populate: { path: "sender", select: "nickname avatarUrl" } })
   .populate("forwardedFrom", "nickname avatarUrl").populate("reactions.user", "nickname");
 const messageView = m => ({
-    if (!/^[\p{L}\p{N}_.-]{3,24}$/u.test(nickname)) return res.status(400).json({ error: "Никнейм: 3–24 символа, буквы, цифры, точка, _ или -." });
+  _id: String(m._id), text: m.text, sender: safeUser(m.sender), recipient: safeUser(m.recipient),
   replyTo: m.replyTo ? { _id: String(m.replyTo._id), text: m.replyTo.text, sender: safeUser(m.replyTo.sender) } : null,
   forwardedFrom: m.forwardedFrom ? safeUser(m.forwardedFrom) : null,
   reactions: (m.reactions || []).map(r => ({ user: String(r.user?._id || r.user), nickname: r.user?.nickname || "", emoji: r.emoji })),
@@ -98,7 +98,7 @@ app.get("/api/health", (_req, res) => res.json({ ok: true, service: "kakugodno",
 app.post("/api/auth/register", async (req, res) => {
   try {
     const nickname = String(req.body.nickname || "").trim(), password = String(req.body.password || "");
-    if (!/^[\\p{L}\\p{N}_.-]{3,24}$/u.test(nickname)) return res.status(400).json({ error: "Никнейм: 3–24 символа, буквы, цифры, точка, _ или -." });
+    if (!/^[\p{L}\p{N}_.-]{3,24}$/u.test(nickname)) return res.status(400).json({ error: "Никнейм: 3–24 символа, буквы, цифры, точка, _ или -." });
     if (password.length < 8 || password.length > 72) return res.status(400).json({ error: "Пароль должен содержать от 8 до 72 символов." });
     const nicknameKey = nickname.toLocaleLowerCase("ru");
     if (await User.exists({ nicknameKey })) return res.status(409).json({ error: "Этот никнейм уже занят." });

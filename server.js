@@ -23,7 +23,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const userSockets = new Map();
 const onlineUsers = new Set();
 
-const allowedAvatar = (value) => {
+  if (typeof value !== "string" || value.length > 700000 || !/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(value)) {
   if (value == null || value === "") return "";
   if (typeof value !== "string" || value.length > 700000 || !/^data:image\\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(value)) {
     throw new Error("Аватар должен быть изображением PNG, JPG, WEBP или GIF размером до 500 КБ.");
@@ -72,7 +72,7 @@ const emitUser = (userId, event, payload) => {
 };
 const auth = async (req, res, next) => {
   try {
-    const raw = (req.headers.authorization || "").replace(/^Bearer\\s+/i, "");
+    const raw = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
     if (!raw) return res.status(401).json({ error: "Нужно войти в аккаунт." });
     const payload = jwt.verify(raw, JWT_SECRET);
     const user = await User.findById(payload.sub);
@@ -84,7 +84,7 @@ const populateMessage = q => q.populate("sender", "nickname avatarUrl").populate
   .populate({ path: "replyTo", populate: { path: "sender", select: "nickname avatarUrl" } })
   .populate("forwardedFrom", "nickname avatarUrl").populate("reactions.user", "nickname");
 const messageView = m => ({
-  _id: String(m._id), text: m.text, sender: safeUser(m.sender), recipient: safeUser(m.recipient),
+    if (!/^[\p{L}\p{N}_.-]{3,24}$/u.test(nickname)) return res.status(400).json({ error: "Никнейм: 3–24 символа, буквы, цифры, точка, _ или -." });
   replyTo: m.replyTo ? { _id: String(m.replyTo._id), text: m.replyTo.text, sender: safeUser(m.replyTo.sender) } : null,
   forwardedFrom: m.forwardedFrom ? safeUser(m.forwardedFrom) : null,
   reactions: (m.reactions || []).map(r => ({ user: String(r.user?._id || r.user), nickname: r.user?.nickname || "", emoji: r.emoji })),
@@ -123,7 +123,7 @@ app.patch("/api/me", auth, async (req, res) => {
 app.get("/api/users/search", auth, async (req, res) => {
   const q = String(req.query.q || "").trim().slice(0, 24);
   if (q.length < 2) return res.json({ users: [] });
-  const safe = q.replace(/[.*+?^$|()[\\]\\\\]/g, "\\\\$&");
+  const safe = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const users = await User.find({ _id: { $ne: req.user._id }, nickname: { $regex: safe, $options: "i" } }).limit(12);
   res.json({ users: users.map(safeUser) });
 });
@@ -277,7 +277,7 @@ io.on("connection", async socket => {
     }
   });
 });
-app.get("*", (req, res, next) => {
+app.get("/{*splat}", (req, res, next) => {
   if (req.path.startsWith("/api/")) return next();
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });

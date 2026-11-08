@@ -81,7 +81,7 @@ function connectSocket() {
     if (i >= 0) { messages[i] = msg; renderMessages(false); }
   });
   socket.on("message:deleted", ({_id}) => { messages = messages.filter(m => m._id !== _id); renderMessages(false); });
-  socket.on("contact:request", ({request}) => { toastRequest(request); loadRequests(); });
+  socket.on("contact:request", ({request}) => { toastRequest(request); });
   socket.on("contact:accepted", ({user}) => { toast(user.nickname + " теперь в твоих контактах", "success"); loadContacts(); });
   socket.on("contact:rejected", () => toast("Запрос контакта отклонён", "info"));
   socket.on("presence:update", ({userId,online}) => {
@@ -97,12 +97,16 @@ function connectSocket() {
   });
   socket.on("call:offer", payload => showIncomingCall(payload));
   socket.on("call:answer", async ({data}) => { if (!activeCall?.pc) return; try { await activeCall.pc.setRemoteDescription(data); await flushIce(); $("callSub").textContent = "Соединение установлено"; } catch(e) { toast("Не удалось подключить звонок", "error"); finishCall(); } });
-  socket.on("call:ice", async ({data}) => {
-    if (!activeCall?.pc) return;
+  socket.on("call:ice", async ({from,data}) => {
+    if (!activeCall?.pc) { if (queuedOffer?.from === from) queuedOffer.pendingIce = [...(queuedOffer.pendingIce || []), data]; return; }
+    if (activeCall.user?._id !== from) return;
     try { if (activeCall.pc.remoteDescription) await activeCall.pc.addIceCandidate(data); else activeCall.pendingIce.push(data); } catch(e) { console.warn("ICE",e); }
   });
-  socket.on("call:hangup", () => { if (activeCall) { toast("Звонок завершён"); finishCall(false); } });
-  socket.on("call:decline", () => { toast("Звонок отклонён"); finishCall(false); });
+  socket.on("call:hangup", ({from}) => {
+    if (activeCall?.user?._id === from) { toast("Звонок завершён"); finishCall(false); }
+    else if (queuedOffer?.from === from) { queuedOffer=null; $("incomingCall").classList.add("hidden"); toast("Звонок завершён"); }
+  });
+  socket.on("call:decline", ({from}) => { if(activeCall?.user?._id === from){toast("Звонок отклонён");finishCall(false);} });
 }
 async function loadContacts() {
   try { contacts = (await api("/contacts")).contacts; $("contactCount").textContent = contacts.length; renderContacts(); }
@@ -290,7 +294,7 @@ function editMyProfile() {
   };
 }
 async function loadRequests() {
-  try { const {requests}=await api("/contacts/requests"); requests.forEach(r=>{}); }
+  try { const {requests}=await api("/contacts/requests"); requests.forEach(toastRequest); }
   catch(e){console.warn(e);}
 }
 function toast(message,type="info") {
@@ -347,7 +351,7 @@ async function startCall(type,user=activeContact) {
 }
 function showIncomingCall(payload) {
   if(activeCall){socket?.emit("call:decline",{to:payload.from});return;}
-  queuedOffer=payload;
+  queuedOffer={...payload,pendingIce:[]};
   $("incomingCallName").textContent=payload.user.nickname+" звонит тебе";
   $("incomingCallType").textContent=payload.callType==="video"?"Видеозвонок":"Аудиозвонок";
   $("incomingCall").classList.remove("hidden");
@@ -356,7 +360,7 @@ $("acceptCall").onclick=async()=>{
   if(!queuedOffer)return;const incoming=queuedOffer;queuedOffer=null;$("incomingCall").classList.add("hidden");
   try{
     showCallScreen(incoming.user,incoming.callType,"Подключаемся...");
-    const pc=await createPeer(incoming.user,incoming.callType);activeCall.incoming=true;
+    const pc=await createPeer(incoming.user,incoming.callType);activeCall.incoming=true;activeCall.pendingIce.push(...(incoming.pendingIce||[]));
     await pc.setRemoteDescription(incoming.data);await flushIce();
     const answer=await pc.createAnswer();await pc.setLocalDescription(answer);
     socket.emit("call:answer",{to:incoming.from,data:pc.localDescription.toJSON(),callType:incoming.callType});

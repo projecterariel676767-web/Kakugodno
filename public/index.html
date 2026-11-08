@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#10131e"><meta name="description" content="Как угодно — личный мессенджер для общения и звонков.">
+  <title>Как угодно — мессенджер</title><link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+  <main id="authScreen" class="auth-screen">
+    <section class="auth-brand">
+      <div class="brand-mark">к<span>у</span></div>
+      <div class="eyebrow">ТВОЁ ПРОСТРАНСТВО ДЛЯ ОБЩЕНИЯ</div>
+      <h1>Общайся<br><span>как угодно.</span></h1>
+      <p>Личные сообщения, близкие люди и звонки — всё в одном спокойном пространстве.</p>
+      <div class="auth-pills"><span>✦ Личные чаты</span><span>◉ Аудио и видео</span><span>♡ Реакции</span></div>
+    </section>
+    <section class="auth-card">
+      <div class="auth-card-head"><div class="small-mark">ку</div><div><strong>Как угодно</strong><small>Рады тебя видеть</small></div></div>
+      <div class="auth-tabs"><button class="tab active" data-mode="login">Войти</button><button class="tab" data-mode="register">Создать аккаунт</button></div>
+      <form id="authForm">
+        <label class="field"><span>Никнейм</span><input id="authNickname" autocomplete="username" minlength="3" maxlength="24" placeholder="Например, alex_01" required></label>
+        <label class="field"><span>Пароль</span><input id="authPassword" type="password" autocomplete="current-password" minlength="8" maxlength="72" placeholder="Не менее 8 символов" required></label>
+        <div id="avatarField" class="avatar-upload hidden"><label for="avatarInput" class="avatar-preview" id="avatarPreview">＋</label><div><b>Добавить аватар</b><small>Необязательно · PNG, JPG, WEBP до 500 КБ</small><input id="avatarInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></div></div>
+        <button id="authSubmit" class="primary-btn" type="submit">Войти <span>→</span></button>
+        <p id="authError" class="form-error" role="alert"></p>
+      </form>
+      <div class="auth-foot">Продолжая, ты создаёшь своё личное пространство.</div>
+    </section>
+  </main>
+
+  <main id="appScreen" class="app-shell hidden">
+    <aside class="sidebar" id="sidebar">
+      <header class="side-top">
+        <div class="brand-inline"><div class="small-mark">ку</div><div><b>Как угодно</b><small>твой круг общения</small></div></div>
+        <button id="profileSelfBtn" class="avatar-button" title="Мой профиль"></button>
+      </header>
+      <div class="sidebar-actions">
+        <div class="section-label">СООБЩЕНИЯ <button id="addContactBtn" class="icon-btn" title="Найти пользователя">＋</button></div>
+        <div class="search-wrap"><span>⌕</span><input id="userSearch" placeholder="Найти человека..." autocomplete="off"></div>
+        <div id="searchResults" class="search-results hidden"></div>
+      </div>
+      <div class="contact-heading"><span>КОНТАКТЫ</span><span id="contactCount">0</span></div>
+      <div id="contactList" class="contact-list"><div class="empty-side">Твои контакты появятся здесь</div></div>
+      <footer class="side-footer"><div class="me-mini" id="selfMini"></div><button id="logoutBtn" class="icon-btn" title="Выйти">↗</button></footer>
+    </aside>
+
+    <section class="chat-panel">
+      <div id="emptyChat" class="empty-chat">
+        <div class="empty-orbit"><span>✦</span><i>♡</i><b>↗</b></div>
+        <h2>Тут начинается общение</h2><p>Выбери контакт слева или найди кого-нибудь по никнейму.</p>
+        <button id="emptyFindBtn" class="secondary-btn">Найти собеседника <span>→</span></button>
+      </div>
+      <section id="conversation" class="conversation hidden">
+        <header class="chat-header">
+          <button id="mobileBack" class="icon-btn back-btn">←</button>
+          <button id="chatProfileBtn" class="chat-person"><span id="chatAvatar"></span><span><b id="chatName">Собеседник</b><small id="chatPresence">не в сети</small></span></button>
+          <div class="chat-tools"><button id="audioCallBtn" class="tool-btn" title="Аудиозвонок">⌕</button><button id="videoCallBtn" class="tool-btn" title="Видеозвонок">▣</button><button id="chatMoreBtn" class="tool-btn" title="Профиль">···</button></div>
+        </header>
+        <div id="messages" class="messages">
+          <div class="conversation-start"><span>✦</span><p>Это начало вашей истории</p></div>
+        </div>
+        <div id="typingIndicator" class="typing-indicator hidden"><span></span><span></span><span></span> печатает...</div>
+        <div id="replyBar" class="reply-bar hidden"><div><small>ОТВЕТ НА СООБЩЕНИЕ</small><span id="replyText"></span></div><button id="cancelReply" class="icon-btn">×</button></div>
+        <form id="messageForm" class="composer">
+          <textarea id="messageInput" rows="1" maxlength="5000" placeholder="Напиши что-нибудь..." autocomplete="off"></textarea>
+          <button id="sendBtn" class="send-btn" type="submit" title="Отправить">↑</button>
+        </form>
+        <div class="composer-note">Enter — отправить · Shift + Enter — новая строка</div>
+      </section>
+    </section>
+  </main>
+
+  <div id="toastStack" class="toast-stack"></div>
+  <div id="modalRoot"></div>
+  <div id="callOverlay" class="call-overlay hidden">
+    <div class="call-card">
+      <div id="callStatus" class="call-status">Соединение...</div>
+      <div id="callAvatar" class="call-avatar"></div>
+      <h2 id="callName">Звонок</h2><p id="callSub">Ожидание подключения</p>
+      <div class="video-stage"><video id="remoteVideo" autoplay playsinline></video><video id="localVideo" autoplay muted playsinline></video></div>
+      <div class="call-actions"><button id="muteCall" class="call-action">⌁</button><button id="toggleVideo" class="call-action">▣</button><button id="endCall" class="call-action end-call">✕</button></div>
+    </div>
+  </div>
+  <div id="incomingCall" class="incoming-call hidden"><div class="incoming-call-icon">↗</div><div><b id="incomingCallName">Входящий звонок</b><small id="incomingCallType">Аудиозвонок</small></div><button id="acceptCall" class="accept-call">Ответить</button><button id="declineCall" class="decline-call">✕</button></div>
+  <script src="/socket.io/socket.io.js"></script><script src="/app.js" defer></script>
+</body>
+</html>

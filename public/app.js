@@ -1,7 +1,7 @@
 const $ = id => document.getElementById(id);
 let token = localStorage.getItem("kakugodno_token") || "";
 let me = null, socket = null, contacts = [], activeContact = null, messages = [], replyTarget = null;
-let authMode = "login", avatarData = "", searchTimer = null, activeCall = null, queuedOffer = null;
+let authMode = "login", avatarData = "", searchTimer = null, activeCall = null, queuedOffer = null, keepaliveTimer = null;
 const reactions = ["❤️","😂","👍","🔥","😮","😢","🎉","👎"];
 const api = async (url, options = {}) => {
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
@@ -62,6 +62,7 @@ async function enterApp() {
 }
 function logout() {
   if (socket) socket.disconnect(); socket = null;
+  clearInterval(keepaliveTimer); keepaliveTimer = null;
   if (activeCall) finishCall(false);
   token = ""; me = null; localStorage.removeItem("kakugodno_token");
   $("appScreen").classList.add("hidden"); $("authScreen").classList.remove("hidden");
@@ -70,6 +71,8 @@ function logout() {
 function connectSocket() {
   if (socket) socket.disconnect();
   socket = io({ auth: { token } });
+  clearInterval(keepaliveTimer);
+  keepaliveTimer = setInterval(() => { if (socket?.connected) socket.emit("keepalive"); }, 5 * 60 * 1000);
   socket.on("connect_error", () => toast("Не удалось подключиться к серверу. Обнови страницу.", "error"));
   socket.on("message:new", msg => {
     if (activeContact && [msg.sender._id,msg.recipient._id].includes(activeContact._id)) {

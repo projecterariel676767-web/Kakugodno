@@ -25,7 +25,10 @@ const onlineUsers = new Set();
 
 const allowedAvatar = (value) => {
   if (value == null || value === "") return "";
-  if (typeof value !== "string" || value.length > 700000 || !/^data:image\\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+\\/=]+$/.test(value)) {
+  const prefixes = ["data:image/png;base64,", "data:image/jpeg;base64,", "data:image/webp;base64,", "data:image/gif;base64,"];
+  const prefix = typeof value === "string" ? prefixes.find(item => value.startsWith(item)) : null;
+  const base64 = prefix ? value.slice(prefix.length) : "";
+  if (!prefix || value.length > 700000 || !base64 || new RegExp("[^A-Za-z0-9+/=]").test(base64)) {
     throw new Error("Аватар должен быть изображением PNG, JPG, WEBP или GIF размером до 500 КБ.");
   }
   return value;

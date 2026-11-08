@@ -323,8 +323,10 @@ function openModal(title,content) {
 function closeModal(){ $("modalRoot").innerHTML=""; }
 
 // Peer-to-peer calls use WebRTC media; Socket.IO is only the signaling channel.
-const rtcConfig={iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}]};
+const rtcFallback={iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}]};
 async function createPeer(user,callType) {
+  let rtcConfig=rtcFallback;
+  try { rtcConfig=await api("/rtc-config"); } catch(e) { console.warn("Using fallback ICE servers",e); }
   const pc=new RTCPeerConnection(rtcConfig);
   activeCall={pc,user,callType,localStream:null,pendingIce:[],incoming:false};
   pc.onicecandidate=e=>{if(e.candidate)socket?.emit("call:ice",{to:user._id,data:e.candidate.toJSON(),callType});};

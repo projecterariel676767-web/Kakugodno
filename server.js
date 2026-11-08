@@ -23,7 +23,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const userSockets = new Map();
 const onlineUsers = new Set();
 
-  if (typeof value !== "string" || value.length > 700000 || !/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(value)) {
+  if (typeof value !== "string" || value.length > 700000 || !/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(value)) {
   if (value == null || value === "") return "";
   if (typeof value !== "string" || value.length > 700000 || !/^data:image\\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(value)) {
     throw new Error("Аватар должен быть изображением PNG, JPG, WEBP или GIF размером до 500 КБ.");
